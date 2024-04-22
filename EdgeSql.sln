@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBD}") = "edge-sql", "edge-sql.csproj", "{C64EE1C0-8A26-426E-B955-B46BC6C13055}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBD}") = "edge-sql", "src/edge-sql/edge-sql.csproj", "{C64EE1C0-8A26-426E-B955-B46BC6C13055}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "edge-sql-coreclr", "src/edge-sql-coreclr/edge-sql-coreclr.csproj", "{14BA26F7-58B6-4ED7-A02C-A306A13A4A66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,10 @@ Global
 		{C64EE1C0-8A26-426E-B955-B46BC6C13055}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C64EE1C0-8A26-426E-B955-B46BC6C13055}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C64EE1C0-8A26-426E-B955-B46BC6C13055}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14BA26F7-58B6-4ED7-A02C-A306A13A4A66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14BA26F7-58B6-4ED7-A02C-A306A13A4A66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14BA26F7-58B6-4ED7-A02C-A306A13A4A66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14BA26F7-58B6-4ED7-A02C-A306A13A4A66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
