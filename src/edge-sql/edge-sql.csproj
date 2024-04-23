@@ -8,6 +8,8 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <PackageProjectUrl>https://github.com/agracio/edge-sql</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/agracio/edge-sql/blob/master/LICENSE</PackageLicenseUrl>
+    <OutputPath>..\..\lib\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
 

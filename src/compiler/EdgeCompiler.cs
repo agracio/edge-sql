@@ -72,9 +72,9 @@ public class EdgeCompiler
         {
             foreach (var parameter in parameters)
             {
-                if (parameter.Key == "returnParameter")
+                if (parameter.Key.StartsWith("@"))
                 {
-                    String returnParameterName = "@" + parameter.Value.ToString();
+                    var returnParameterName = "@" + parameter.Value.ToString().TrimStart('@');
                     command.Parameters.Add(returnParameterName, SqlDbType.NVarChar, -1);
                     command.Parameters[returnParameterName].Direction = ParameterDirection.Output;
                 }
@@ -109,7 +109,7 @@ public class EdgeCompiler
             do
             {
                 var tableRows = reader.GetSchemaTable()?.Rows;
-                string table = string.Empty;
+                string? table = string.Empty;
                 if (tableRows?.Count != 0)
                 {
                     table = tableRows?[0]["BaseTableName"]?.ToString();
@@ -201,11 +201,35 @@ public class EdgeCompiler
             {
                 CommandType = CommandType.StoredProcedure
             };
+            
             if (commandTimeout.HasValue) command.CommandTimeout = commandTimeout.Value;
-            using (command)
+
+            if (parameters != null && parameters.Keys.Any(v => v.StartsWith("@")))
             {
-                return await ExecuteQuery(parameters, command, connection);
+                IDictionary<string, string> results = new Dictionary<string, string>();
+                AddParameters(command, parameters);
+                using (command)
+                {
+                    await connection.OpenAsync();
+                    await command.ExecuteNonQueryAsync();
+                    connection.Close();
+                    foreach (var key in parameters.Keys.Where(v =>v.ToString().StartsWith("@")))
+                    {
+                        var returnParameterName = "@" + parameters[key].ToString().TrimStart('@');
+                        results[parameters[key].ToString()] = command.Parameters[returnParameterName].Value.ToString();
+                    }
+
+                    return results;
+                }
             }
+            else
+            {
+                using (command)
+                {
+                    return await ExecuteQuery(parameters, command, connection);
+                }
+            }
+            
         }
     }
 }
