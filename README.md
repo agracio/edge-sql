@@ -9,12 +9,11 @@
 * Supports returning multiple results from `select` queries
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
-* Supports .NET Framework 4.5 and .NET Standard 2.0
 
 **NOTE** SQL Server Geography and Geometry types are not supported.
 
 ### Supported .NET frameworks
-* .NET 4.5
+* .NET 4.6.2
 * .NET Core - netstandard 2.0
 
 ### SQL statement interpretation
