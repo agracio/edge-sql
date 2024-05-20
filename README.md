@@ -12,6 +12,10 @@
 
 **NOTE** SQL Server Geography and Geometry types are not supported.
 
+### Supported .NET frameworks
+* .NET 4.5
+* .NET Core - netstandard 2.0
+
 ### SQL statement interpretation
 
 | SQL Statement   | C# Implemetation     |
@@ -197,8 +201,8 @@ END
 
 Javascript
 
-* Return parameter **names** have to start with **@** 
-* Return parameter **values** have to correspond to stored proc output names
+* Return parameter ***names*** must start with ***@returnParam*** 
+* Return parameter ***values*** must correspond to stored proc output names
 * Return values are converted to string
 * Result will return stored proc output names <br/> <br/>
   
@@ -211,7 +215,7 @@ var execProc = edge.func('sql', {
     connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
 });
 
-execProc({ AuthorID: 1, '@return1': 'Name', '@return2': 'Country' }, function (error, result) {
+execProc({ AuthorID: 1, '@returnParam1': 'Name', '@returnParam2': 'Country' }, function (error, result) {
     if (error) throw error;
     console.log(result);
 });

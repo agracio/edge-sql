@@ -5,20 +5,48 @@
     "url": "http://tomasz.janczuk.org",
     "twitter": "tjanczuk"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Edge-sql: access SQL databases from Node.js using Edge.js and ADO.NET",
-  "tags" : ["edge", "edgejs", "edge-js", "net", "clr", "c#", "managed", ".net", "ado.net"],
+  "tags": [
+    "edge",
+    "edgejs",
+    "edge.js",
+    "edge-js",
+    "net",
+    "clr",
+    "c#",
+    "managed",
+    ".net",
+    "ado.net",
+    "sql-server",
+    "ms-sql"
+  ],
+  "keywords": [
+    "edge",
+    "edgejs",
+    "edge.js",
+    "edge-js",
+    "net",
+    "clr",
+    "c#",
+    "managed",
+    ".net",
+    "ado.net",
+    "sql-server",
+    "ms-sql"
+  ],
   "main": "./lib/edge-sql.js",
-  "engines": { "node": ">= 0.6" },
-  "license": "MIT",
-  "dependencies": {
+  "engines": {
+    "node": ">= 0.6"
   },
+  "license": "MIT",
+  "dependencies": {},
   "homepage": "https://github.com/agracio/edge-sql",
   "repository": {
     "type": "git",
-    "url": "git@github.com:agracio/edge-sql.git"
+    "url": "git+ssh://git@github.com/agracio/edge-sql.git"
   },
-  "bugs" : {
-    "url" : "http://github.com/agracio/edge-sql/issues"
+  "bugs": {
+    "url": "http://github.com/agracio/edge-sql/issues"
   }
 }

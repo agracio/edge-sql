@@ -8,8 +8,15 @@ using System.Linq;
 
 public class EdgeCompiler
 {
+    private enum QueryType{
+        Select,
+        NonQuery,
+        Proc,
+        Other
+    }
     public Func<object, Task<object>> CompileFunc(IDictionary<string, object> parameters)
     {
+        QueryType queryType;
         string command = ((string)parameters["source"]).TrimStart();
         string connectionString = Environment.GetEnvironmentVariable("EDGE_SQL_CONNECTION_STRING");
         int? commandTimeout = null;
@@ -31,6 +38,7 @@ public class EdgeCompiler
 
         if (command.StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
         {
+            queryType = QueryType.Select;
             return async (queryParameters) => await 
             ExecuteQuery(
                 connectionString, 
@@ -42,14 +50,19 @@ public class EdgeCompiler
             || command.StartsWith("update ", StringComparison.InvariantCultureIgnoreCase)
             || command.StartsWith("delete ", StringComparison.InvariantCultureIgnoreCase))
         {
+            queryType = QueryType.NonQuery;
             return async (queryParameters) => await 
             ExecuteNonQuery(
                 connectionString, 
                 command, (IDictionary<string, object>)queryParameters, 
                 commandTimeout);
         }
-        if (command.StartsWith("exec ", StringComparison.InvariantCultureIgnoreCase) || command.StartsWith("execute ", StringComparison.InvariantCultureIgnoreCase))
+
+        if (command.StartsWith("exec ", StringComparison.InvariantCultureIgnoreCase) || 
+            command.StartsWith("execute ", StringComparison.InvariantCultureIgnoreCase) ||
+            command.StartsWith("call ", StringComparison.InvariantCultureIgnoreCase))
         {
+            queryType = QueryType.Proc;
             return async (queryParameters) => await
                 ExecuteStoredProcedure(
                     connectionString,
@@ -57,6 +70,8 @@ public class EdgeCompiler
                     (IDictionary<string, object>)queryParameters,
                     commandTimeout);
         }
+
+        queryType = QueryType.Other;
         // Use ExecuteQuery for any other SQL commands 
         return async (queryParameters) => await 
             ExecuteQuery(
@@ -72,7 +87,7 @@ public class EdgeCompiler
         {
             foreach (var parameter in parameters)
             {
-                if (parameter.Key.StartsWith("@"))
+                if (parameter.Key.StartsWith("@returnParam"))
                 {
                     var returnParameterName = "@" + parameter.Value.ToString().TrimStart('@');
                     command.Parameters.Add(returnParameterName, SqlDbType.NVarChar, -1);
@@ -88,7 +103,7 @@ public class EdgeCompiler
 
     async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
     {
-        using (SqlConnection connection = new SqlConnection(connectionString))
+        using (var connection = new SqlConnection(connectionString))
         {
             using (var command = new SqlCommand(commandString, connection))
             {
@@ -104,12 +119,12 @@ public class EdgeCompiler
         var results = new Dictionary<string, object>();
         await connection.OpenAsync();
         var resultCount = new Dictionary<string, int>();
-        using (SqlDataReader reader = await command.ExecuteReaderAsync(CommandBehavior.KeyInfo))
+        using (var reader = await command.ExecuteReaderAsync(CommandBehavior.KeyInfo))
         {
             do
             {
                 var tableRows = reader.GetSchemaTable()?.Rows;
-                string? table = string.Empty;
+                var table = string.Empty;
                 if (tableRows?.Count != 0)
                 {
                     table = tableRows?[0]["BaseTableName"]?.ToString();
@@ -204,7 +219,7 @@ public class EdgeCompiler
             
             if (commandTimeout.HasValue) command.CommandTimeout = commandTimeout.Value;
 
-            if (parameters != null && parameters.Keys.Any(v => v.StartsWith("@")))
+            if (parameters != null && parameters.Keys.Any(v => v.StartsWith("@returnParam")))
             {
                 IDictionary<string, string> results = new Dictionary<string, string>();
                 AddParameters(command, parameters);
@@ -213,7 +228,7 @@ public class EdgeCompiler
                     await connection.OpenAsync();
                     await command.ExecuteNonQueryAsync();
                     connection.Close();
-                    foreach (var key in parameters.Keys.Where(v =>v.ToString().StartsWith("@")))
+                    foreach (var key in parameters.Keys.Where(v =>v.ToString().StartsWith("@returnParam")))
                     {
                         var returnParameterName = "@" + parameters[key].ToString().TrimStart('@');
                         results[parameters[key].ToString()] = command.Parameters[returnParameterName].Value.ToString();
@@ -222,14 +237,12 @@ public class EdgeCompiler
                     return results;
                 }
             }
-            else
+
+            using (command)
             {
-                using (command)
-                {
-                    return await ExecuteQuery(parameters, command, connection);
-                }
+                return await ExecuteQuery(parameters, command, connection);
             }
-            
+
         }
     }
 }
