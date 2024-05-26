@@ -6,7 +6,7 @@
 -------
 
 ## Overview
-* Supports returning multiple results from `select` queries
+* Supports returning multiple results from queries
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
@@ -16,7 +16,7 @@
 * .NET 4.6.2
 * .NET Core - netstandard 2.0
 
-### SQL statement interpretation
+### SQL statement interpretation (statement starts with...)
 
 | SQL Statement   | C# Implemetation     |
 | --------------- | -------------------- |
@@ -29,19 +29,22 @@
 
 ***Stored procedures with output parameters are executed using ExecuteNonQueryAsync, see examples below**
 
-### Parameters
+### Options
 
-| Parameter          | Usage                |
+| Option             | Usage                |
 | ------------------ | -------------------- |
-| `connectionString` | Required. Use environment variable or input parameter |
-| `source`           | Optional if no other parameters are specified         |
-| `commandTimeout`   | Optional                                              |
+| `connectionString` | Required. Use environment variable or input option |
+| `source`           | Optional if no other options are specified         |
+| `commandTimeout`   | Optional                                           |
 
-To better understand parameter usage see examples below.
+### Simple queries without options
 
-### Basic usage
+```bash
+npm install edge-js
+npm install edge-sql
+```
 
-You can set your SQL connection string using environment variable. For passing connection string as a parameter see [Advanced usage](#advanced-usage).
+You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
 
 ```
 set EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;Integrated Security=True
@@ -99,9 +102,9 @@ updateProductName({ myProductId: 10, newName: 'New Product' }, function (error, 
 });
 ```
 
-### Advanced usage
- 
-#### Using parameterized function
+### Using options
+
+#### Passing options to function
 
 ```js
 const edge = require('edge-js');
@@ -203,9 +206,8 @@ Javascript
 
 * Return parameter ***names*** must start with ***@returnParam*** 
 * Return parameter ***values*** must correspond to stored proc output names
-* Return values are converted to string
-* Result will return stored proc output names <br/> <br/>
-  
+* Return parameters will be treated as ***nvarchar(max)***
+* Result will return stored proc output names <br/> <br/>  
   
 ```js
 const edge = require('edge-js');

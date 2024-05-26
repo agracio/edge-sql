@@ -5,7 +5,7 @@
     "url": "http://tomasz.janczuk.org",
     "twitter": "tjanczuk"
   },
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Edge-sql: access SQL databases from Node.js using Edge.js and ADO.NET",
   "tags": [
     "edge",
@@ -48,5 +48,8 @@
   },
   "bugs": {
     "url": "http://github.com/agracio/edge-sql/issues"
+  },
+  "scripts": {
+    "install": "node install.js"
   }
 }

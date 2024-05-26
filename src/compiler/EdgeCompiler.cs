@@ -4,7 +4,10 @@ using System.Dynamic;
 using System.Threading.Tasks;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
+using System.Text;
 
 public class EdgeCompiler
 {
@@ -14,11 +17,31 @@ public class EdgeCompiler
         Proc,
         Other
     }
+
+    private static IDictionary<string, object> Deserialize(string json)
+    {
+        try
+        {
+            using (var stream = new MemoryStream(Encoding.Default.GetBytes(json)))
+            {
+
+                var serializer = new DataContractJsonSerializer(typeof(IDictionary<string, object>), new DataContractJsonSerializerSettings
+                {
+                    UseSimpleDictionaryFormat = true 
+                });
+                return serializer.ReadObject(stream) as IDictionary<string, object>;
+            }
+        }
+        catch (Exception)
+        {
+            throw new Exception("Failed to convert string to IDictionary<string, object> ");
+        }
+    }
     public Func<object, Task<object>> CompileFunc(IDictionary<string, object> parameters)
     {
         QueryType queryType;
-        string command = ((string)parameters["source"]).TrimStart();
-        string connectionString = Environment.GetEnvironmentVariable("EDGE_SQL_CONNECTION_STRING");
+        var command = ((string)parameters["source"]).TrimStart();
+        var connectionString = Environment.GetEnvironmentVariable("EDGE_SQL_CONNECTION_STRING");
         int? commandTimeout = null;
 
         if (parameters.TryGetValue("connectionString", out var connectionStringTmp))
@@ -33,7 +56,8 @@ public class EdgeCompiler
 
         if (parameters.TryGetValue("commandTimeout", out var commandTimeoutTmp))
         {
-            commandTimeout = (int)commandTimeoutTmp;
+            int.TryParse(commandTimeoutTmp.ToString(), out var timeout);
+            if (timeout != 0) commandTimeout = timeout;
         }
 
         if (command.StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
@@ -43,7 +67,7 @@ public class EdgeCompiler
             ExecuteQuery(
                 connectionString, 
                 command, 
-                (IDictionary<string, object>)queryParameters, 
+                queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
                 commandTimeout);
         }
         if (command.StartsWith("insert ", StringComparison.InvariantCultureIgnoreCase)
@@ -54,7 +78,8 @@ public class EdgeCompiler
             return async (queryParameters) => await 
             ExecuteNonQuery(
                 connectionString, 
-                command, (IDictionary<string, object>)queryParameters, 
+                command, 
+                queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
                 commandTimeout);
         }
 
@@ -67,7 +92,7 @@ public class EdgeCompiler
                 ExecuteStoredProcedure(
                     connectionString,
                     command,
-                    (IDictionary<string, object>)queryParameters,
+                    queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
                     commandTimeout);
         }
 
@@ -77,7 +102,7 @@ public class EdgeCompiler
             ExecuteQuery(
                 connectionString, 
                 command, 
-                (IDictionary<string, object>)queryParameters, 
+                queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
                 commandTimeout);
     }
 
