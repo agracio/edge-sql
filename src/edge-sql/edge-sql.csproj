@@ -18,9 +18,23 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="..\compiler\EdgeCompiler.cs">
       <Link>EdgeCompiler.cs</Link>
     </Compile>
+    <Compile Include="..\compiler\Query.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\compiler\MsSqlQuery.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\compiler\MySqlQuery.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="9.3.0" />
   </ItemGroup>
 </Project>

@@ -16,27 +16,10 @@ if (process.platform === 'win32'){
     }
 }
 else if(process.platform === 'darwin'){
-    if(process.arch === 'x64'){
-        copy('osx-x64');
-    }
-    else if(process.arch === 'arm64'){
-        copy('osx-arm64');
-    }
-    else{
-        archError();
-    }
-
+    copy('darwin');
 }
 else if(process.platform === 'linux'){
-    if(process.arch === 'x64'){
-        copy('linux-x64');
-    }
-    else if(process.arch === 'arm64'){
-        copy('linux-arm64');
-    }
-    else{
-        archError();
-    }
+    copy('linux');
 }
 else{
     throw new Error(`Platform '${process.platform}' is not supported. `);

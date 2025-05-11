@@ -1,26 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup>
-  <Description>Edge.js enables scripting CLR languages from Node.js. This package is a dependency of Edge.js and supports scripting SQL from Node.</Description>
-  <AssemblyTitle>C# compiler for Edge.js</AssemblyTitle>
-  <VersionPrefix>1.0.0</VersionPrefix>
-  <TargetFramework>netstandard2.0</TargetFramework>
-  <AssemblyName>edge-sql-coreclr</AssemblyName>
-  <PackageId>edge-sql-coreclr</PackageId>
-  <PackageProjectUrl>https://github.com/agracio/edge-sql</PackageProjectUrl>
-  <PackageLicenseUrl>https://github.com/agracio/edge-sql/blob/master/LICENSE</PackageLicenseUrl>
-  <OutputPath>..\..\lib\</OutputPath>
-  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  <LangVersion>default</LangVersion>
-  <Nullable>enable</Nullable>
-</PropertyGroup>
-
-<ItemGroup>
-  <Compile Include="..\compiler\EdgeCompiler.cs">
-    <Link>EdgeCompiler.cs</Link>
-  </Compile>
-</ItemGroup>
-
-<ItemGroup>
-  <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
-</ItemGroup>
+  <PropertyGroup>
+    <Description>Edge.js enables scripting CLR languages from Node.js. This package is a dependency of Edge.js and supports scripting SQL from Node.</Description>
+    <AssemblyTitle>SQL compiler for Edge.js</AssemblyTitle>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>edge-sql-coreclr</AssemblyName>
+    <PackageId>edge-sql-coreclr</PackageId>
+    <PackageProjectUrl>https://github.com/agracio/edge-sql</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/agracio/edge-sql/blob/master/LICENSE</PackageLicenseUrl>
+    <OutputPath>..\..\lib\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\compiler\EdgeCompiler.cs">
+      <Link>EdgeCompiler.cs</Link>
+    </Compile>
+    <Compile Include="..\compiler\Query.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\compiler\MsSqlQuery.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+    <Compile Include="..\compiler\MySqlQuery.cs">
+      <Link>Query.cs</Link>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="9.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+  </ItemGroup>
 </Project>

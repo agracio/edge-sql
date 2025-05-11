@@ -115,3 +115,5 @@ src/edge-sql-coreclr/bin
 src/edge-sql-coreclr/obj
 *.deps.json
 *.pdb
+lib/System.*
+lib/sni.*

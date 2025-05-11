@@ -1,11 +1,12 @@
 ## edge-sql
 
-### MS SQL Server compiler for [Edge.js](https://github.com/agracio/edge-js). 
+### MS SQL Server and MySQL compiler for [Edge.js](https://github.com/agracio/edge-js). 
 
 ### This library is based on https://github.com/tjanczuk/edge-sql all credit for original work goes to Tomasz Janczuk. 
 -------
 
 ## Overview
+* Supports MS SQL and MySQL
 * Supports returning multiple results from queries
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
@@ -18,14 +19,14 @@
 
 ### SQL statement interpretation (statement starts with...)
 
-| SQL Statement   | C# Implemetation     |
-| --------------- | -------------------- |
-| select          | ExecuteReaderAsync   |
-| update          | ExecuteNonQueryAsync |
-| insert          | ExecuteNonQueryAsync |
-| delete          | ExecuteNonQueryAsync |
-| exec/execute    | ExecuteReaderAsync*  |
-| other           | ExecuteReaderAsync   |
+| SQL Statement     | C# Implemetation     |
+|-------------------| -------------------- |
+| select            | ExecuteReaderAsync   |
+| update            | ExecuteNonQueryAsync |
+| insert            | ExecuteNonQueryAsync |
+| delete            | ExecuteNonQueryAsync |
+| exec/execute/call | ExecuteReaderAsync*  |
+| other             | ExecuteReaderAsync   |
 
 ***Stored procedures with output parameters are executed using ExecuteNonQueryAsync, see examples below**
 
@@ -55,8 +56,14 @@ set EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;I
 ```js
 const edge = require('edge-js');
 
+// MS SQL
 var getTop10Products = edge.func('sql', function () {/*
     select top 10 * from Products
+*/});
+
+// MySQL
+var getTop10ProductsMySql = edge.func('sql', function () {/*
+    select top * from Products LIMIT 10
 */});
 
 getTop10Products(null, function (error, result) {
@@ -167,9 +174,16 @@ const edge = require('edge-js');
 
 var params = {inputParm1: 'input1', inputParam2: 25};
 
+// MS SQL
 var execProc = edge.func('sql', {
     source: 'exec myStoredProc',
     connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+// MySQL
+var execProcMySql = edge.func('sql', {
+    source: 'call myStoredProc',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;'
 });
 
 execProc(params, function (error, result) {
@@ -181,6 +195,7 @@ execProc(params, function (error, result) {
 
 Example SQL 
 
+#### MS SQL
 ```sql
 CREATE Table Authors
 (
@@ -202,22 +217,57 @@ BEGIN
 END
 ```
 
+#### MySQL
+```sql
+CREATE Table Authors
+(
+    Id int not null,
+    Name nvarchar(50),
+    Country nvarchar(50),
+    PRIMARY KEY (Id)
+);
+
+CREATE PROCEDURE GetAuthorDetails
+(
+    IN AuthorId int,
+    OUT AuthorName nvarchar(50),
+    OUT AuthorCountry nvarchar(50)
+)
+BEGIN
+    SELECT Name, Country into AuthorName, AuthorCountry FROM Authors WHERE Id = AuthorId;
+END;
+```
+
 Javascript
 
 * Return parameter ***names*** must start with ***@returnParam*** 
 * Return parameter ***values*** must correspond to stored proc output names
-* Return parameters will be treated as ***nvarchar(max)***
+* Return parameters will be treated as ***nvarchar(max)*** for MS SQL or ***varchar(max)*** for MySQL
 * Result will return stored proc output names <br/> <br/>  
   
 ```js
 const edge = require('edge-js');
 
+// MS SQL
 var execProc = edge.func('sql', {
     source: 'exec GetAuthorDetails',
     connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
 });
 
+// MySQL
+var execProcMySql = edge.func('sql', {
+    source: 'call GetAuthorDetails',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;'
+});
+
+// MS SQL
 execProc({ AuthorID: 1, '@returnParam1': 'Name', '@returnParam2': 'Country' }, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// MySQL
+execProcMySql({ AuthorID: 1, '@returnParam1': 'AuthorName', '@returnParam2': 'AuthorCountry' }, function (error, result) {
     if (error) throw error;
     console.log(result);
 });

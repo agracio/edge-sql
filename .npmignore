@@ -46,3 +46,6 @@ build.js
 /*.fs
 /*.fsx
 *.deps.json
+
+lib/System.*
+!lib/System.Data.SqlClient.*
