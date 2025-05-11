@@ -276,5 +276,9 @@ execProcMySql({ AuthorID: 1, '@returnParam1': 'AuthorName', '@returnParam2': 'Au
 Result
 
 ```js
+// MS SQL
 { Name: 'Author - 1', Country: 'Country - 1' }
+
+// MySQL
+{ AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
 ```

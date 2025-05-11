@@ -45,7 +45,9 @@ build.js
 *.sln
 /*.fs
 /*.fsx
-*.deps.json
 
 lib/System.*
+lib/sni.dll
 !lib/System.Data.SqlClient.*
+!lib/System.Configuration.ConfigurationManager.*
+!lib/System.Security.Permissions.*

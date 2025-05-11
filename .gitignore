@@ -117,3 +117,5 @@ src/edge-sql-coreclr/obj
 *.pdb
 lib/System.*
 lib/sni.*
+!lib/System.Configuration.ConfigurationManager.*
+!lib/System.Security.Permissions.*
