@@ -58,14 +58,8 @@ set EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;I
 ```js
 const edge = require('edge-js');
 
-// MS SQL
 var getTop10Products = edge.func('sql', function () {/*
     select top 10 * from Products
-*/});
-
-// MySQL
-var getTop10ProductsMySql = edge.func('sql', function () {/*
-    select top * from Products LIMIT 10
 */});
 
 getTop10Products(null, function (error, result) {
@@ -185,7 +179,8 @@ var execProc = edge.func('sql', {
 // MySQL
 var execProcMySql = edge.func('sql', {
     source: 'call myStoredProc',
-    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;'
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
 });
 
 execProc(params, function (error, result) {
@@ -259,7 +254,8 @@ var execProc = edge.func('sql', {
 // MySQL
 var execProcMySql = edge.func('sql', {
     source: 'call GetAuthorDetails',
-    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;'
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
 });
 
 // MS SQL
