@@ -106,7 +106,7 @@ public abstract class Query
     protected async Task<object> ExecuteStoredProcedure(DbCommand command, DbConnection connection, bool nonQuery, int? commandTimeout = null)
     {
         command.CommandType = CommandType.StoredProcedure;
-        return  nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
+        return nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
     }
     
     protected async Task<object> ExecuteStoredProcedureWithReturnParams(DbCommand command, DbConnection connection, IDictionary<string, object> parameters, int? commandTimeout = null)
