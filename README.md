@@ -112,10 +112,19 @@ updateProductName({ myProductId: 10, newName: 'New Product' }, function (error, 
 ```js
 const edge = require('edge-js');
 
+// MS SQL
 var select = edge.func('sql', {
     source: 'select top 10 * from Products',
     connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI',
     commandTimeout: 100
+});
+
+// MySQL
+var selectMySql = edge.func('sql', {
+    source: 'select top * from Products limit 10',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI',
+    commandTimeout: 100,
+    db: 'mysql'
 });
 
 select(null, function (error, result) {
@@ -139,7 +148,6 @@ select(null, function (error, result) {
     if (error) throw error;
     console.log(result);
 });
-
 ```
 
 Result
@@ -187,7 +195,7 @@ execProc(params, function (error, result) {
     if (error) throw error;
     console.log(result);
 });
-```  
+```
 #### Stored proc with output parameters
 
 Example SQL 
