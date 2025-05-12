@@ -32,11 +32,13 @@
 
 ### Options
 
-| Option             | Usage                |
-| ------------------ | -------------------- |
-| `connectionString` | Required. Use environment variable or input option |
-| `source`           | Optional if no other options are specified         |
-| `commandTimeout`   | Optional                                           |
+| Option             | Default | Usage                                                        |
+|--------------------|---------|--------------------------------------------------------------|
+| `connectionString` |         | Required. Use environment variable or input option.          |
+| `source`           |         | Optional if no other options are specified.                  |
+| `commandTimeout`   |         | Optional, if specified will be applied to DbCommand instance |
+| `db`               | mssql   | Can be 'mssql' or 'mysql'. Not case sensitive.               |
+| `nonQuery`         | false   | Force stored procedure to run as ExecuteNonQueryAsync        |
 
 ### Simple queries without options
 

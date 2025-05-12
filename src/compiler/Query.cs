@@ -15,7 +15,7 @@ public abstract class Query
 
     public abstract Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null);
 
-    public abstract Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null);
+    public abstract Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, bool nonQuery, int? commandTimeout = null);
     
     protected async Task<object> ExecuteQuery(DbCommand command, DbConnection connection, int? commandTimeout = null)
     {
@@ -103,10 +103,10 @@ public abstract class Query
         return await command.ExecuteNonQueryAsync();
     }
     
-    protected async Task<object> ExecuteStoredProcedure(DbCommand command, DbConnection connection, int? commandTimeout = null)
+    protected async Task<object> ExecuteStoredProcedure(DbCommand command, DbConnection connection, bool nonQuery, int? commandTimeout = null)
     {
         command.CommandType = CommandType.StoredProcedure;
-        return await ExecuteQuery(command, connection, commandTimeout);
+        return  nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
     }
     
     protected async Task<object> ExecuteStoredProcedureWithReturnParams(DbCommand command, DbConnection connection, IDictionary<string, object> parameters, int? commandTimeout = null)

@@ -47,6 +47,7 @@ public class EdgeCompiler
         var connectionString = Environment.GetEnvironmentVariable("EDGE_SQL_CONNECTION_STRING");
         int? commandTimeout = null;
         string db = "mssql";
+        bool nonQuery = false;
         Query query = new MsSqlQuery();
 
         if (parameters.TryGetValue("connectionString", out var connectionStringTmp))
@@ -63,6 +64,12 @@ public class EdgeCompiler
         {
             int.TryParse(commandTimeoutTmp.ToString(), out var timeout);
             if (timeout != 0) commandTimeout = timeout;
+        }
+        
+        if (parameters.TryGetValue("nonQuery", out var nonQueryTmp))
+        {
+            bool.TryParse(nonQueryTmp.ToString(), out var nonQueryOut);
+            nonQuery = nonQueryOut;
         }
         
         if (parameters.TryGetValue("db", out var dbTmp))
@@ -115,7 +122,8 @@ public class EdgeCompiler
                 query.ExecuteStoredProcedure(
                     connectionString,
                     command.Substring(trim).TrimEnd(),
-                    queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
+                    queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters,
+                    nonQuery,
                     commandTimeout);
         }
 

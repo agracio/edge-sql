@@ -30,29 +30,21 @@ public class MySqlQuery: Query
     }
     public override async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
     {
-        using (var connection = new MySqlConnection(connectionString))
-        {
-            using (var command = new MySqlCommand(commandString, connection))
-            {
-                AddParameters(command, parameters);
-                return await ExecuteQuery(command, connection, commandTimeout);
-            }
-        }
+        using var connection = new MySqlConnection(connectionString);
+        using var command = new MySqlCommand(commandString, connection);
+        AddParameters(command, parameters);
+        return await ExecuteQuery(command, connection, commandTimeout);
     }
     
     public override async Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
     {
-        using (var connection = new MySqlConnection(connectionString))
-        {
-            using (var command = new MySqlCommand(commandString, connection))
-            {
-                AddParameters(command, parameters);
-                return await ExecuteNonQuery(command, connection, commandTimeout);
-            }
-        }
+        using var connection = new MySqlConnection(connectionString);
+        using var command = new MySqlCommand(commandString, connection);
+        AddParameters(command, parameters);
+        return await ExecuteNonQuery(command, connection, commandTimeout);
     }
 
-    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
+    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, bool nonQuery, int? commandTimeout = null)
     {
         using (var connection = new MySqlConnection(connectionString))
         {
@@ -65,7 +57,7 @@ public class MySqlQuery: Query
             }
             using (command)
             {
-                return await ExecuteStoredProcedure(command, connection, commandTimeout);
+                return await ExecuteStoredProcedure(command, connection, nonQuery, commandTimeout);
             }
         }
     }

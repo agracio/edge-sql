@@ -31,36 +31,25 @@ public class MsSqlQuery: Query
 
     public override async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
     {
-        using (var connection = new SqlConnection(connectionString))
-        {
-            using (var command = new SqlCommand(commandString, connection))
-            {
-                AddParameters(command, parameters);
-                return await ExecuteQuery(command, connection, commandTimeout);
-            }
-        }
+        using var connection = new SqlConnection(connectionString);
+        using var command = new SqlCommand(commandString, connection);
+        AddParameters(command, parameters);
+        return await ExecuteQuery(command, connection, commandTimeout);
     }
     
     public override async Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
     {
-        using (var connection = new SqlConnection(connectionString))
-        {
-            using (var command = new SqlCommand(commandString, connection))
-            {
-                AddParameters(command, parameters);
-                return await ExecuteNonQuery(command, connection, commandTimeout);
-            }
-        }
+        using var connection = new SqlConnection(connectionString);
+        using var command = new SqlCommand(commandString, connection);
+        AddParameters(command, parameters);
+        return await ExecuteNonQuery(command, connection, commandTimeout);
     }
     
-    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
+    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, bool nonQuery, int? commandTimeout = null)
     {
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
-            SqlCommand command = new SqlCommand(commandString, connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
+            var command = new SqlCommand(commandString, connection);
             AddParameters(command, parameters);
     
             if (parameters != null && parameters.Keys.Any(v => v.StartsWith("@returnParam")))
@@ -69,7 +58,7 @@ public class MsSqlQuery: Query
             }
             using (command)
             {
-                return await ExecuteStoredProcedure(command, connection, commandTimeout);
+                return await ExecuteStoredProcedure(command, connection, nonQuery, commandTimeout);
             }
     
         }
