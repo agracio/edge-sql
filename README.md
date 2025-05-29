@@ -1,17 +1,22 @@
 ## edge-sql
 
-### MS SQL Server and MySQL compiler for [Edge.js](https://github.com/agracio/edge-js). 
+### MS SQL, MySQL and PostgreSQL compiler for [Edge.js](https://github.com/agracio/edge-js). 
 
 ### This library is based on https://github.com/tjanczuk/edge-sql all credit for original work goes to Tomasz Janczuk. 
+
 -------
 
 ## Overview
-* Supports MS SQL and MySQL
+* Supports MS SQL, MySQL, PostgreSQL
 * Supports returning multiple results from queries
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
-**NOTE** SQL Server Geography and Geometry types are not supported.
+### Geometry and Geography types
+
+#### MS SQL
+- Supports only querying but not inserting/updating. Geometry and Geography types are returned as strings in WKT format.
+- Supported only when using .NET Core.
 
 ### Supported .NET frameworks
 * .NET 4.6.2
@@ -19,39 +24,51 @@
 
 ### SQL statement interpretation (statement starts with...)
 
-| SQL Statement     | C# Implemetation     |
-|-------------------| -------------------- |
-| select            | ExecuteReaderAsync   |
+| SQL Statement     | C# Implementation    |
+|-------------------|----------------------|
+| select            | ExecuteReaderAsync*  |
 | update            | ExecuteNonQueryAsync |
 | insert            | ExecuteNonQueryAsync |
 | delete            | ExecuteNonQueryAsync |
 | exec/execute/call | ExecuteReaderAsync*  |
-| other             | ExecuteReaderAsync   |
+| none of the above | ExecuteReaderAsync*  |
 
-***Stored procedures with output parameters are executed using ExecuteNonQueryAsync, see examples below**
+***MS SQL and MySQL stored procedures with output parameters are executed using ExecuteNonQueryAsync.**  
+***Can be overriden using `nonQuery` option.**
 
 ### Options
 
-| Option             | Default | Usage                                                        |
-|--------------------|---------|--------------------------------------------------------------|
-| `connectionString` |         | Required. Use environment variable or input option.          |
-| `source`           |         | Optional if no other options are specified.                  |
-| `commandTimeout`   |         | Optional, if specified will be applied to DbCommand instance |
-| `db`               | mssql   | Can be 'mssql' or 'mysql'. Not case sensitive.               |
-| `nonQuery`         | false   | Force stored procedure to run as ExecuteNonQueryAsync        |
+| Option             | Default | Usage                                                                   |
+|--------------------|---------|-------------------------------------------------------------------------|
+| `connectionString` |         | Required. Use environment variable or input option.                     |
+| `source`           |         | Optional if no other options are specified.                             |
+| `commandTimeout`   |         | Optional, if specified will be applied to DbCommand instance.           |
+| `db`               | 'MsSql' | Can be 'MsSql', 'MySql', 'PgSql'. Not case sensitive.                   |
+| `nonQuery`         |  false  | Force certain queries to run as ExecuteNonQueryAsync depending on `db`. |
 
-### Simple queries without options
+#### `nonQuery`
+ - If set to true when calling stored procedure will force it to run as ExecuteNonQueryAsync.
+ - For PostgreSQL can also be used to force `select` statement to run as ExecuteNonQueryAsync when calling functions. 
+ - If set to true when calling 'other' SQL statements will force it to run as ExecuteNonQueryAsync.
+
+## Usage 
 
 ```bash
 npm install edge-js
 npm install edge-sql
 ```
+#### You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
 
-You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
-
+#### Windows
 ```
 set EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;Integrated Security=True
 ```
+#### Linux/macOS
+```
+export EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;Integrated Security=True
+```
+
+### Simple queries without options - MS SQL only
 
 #### Simple select
 
@@ -107,8 +124,6 @@ updateProductName({ myProductId: 10, newName: 'New Product' }, function (error, 
 
 ### Using options
 
-#### Passing options to function
-
 ```js
 const edge = require('edge-js');
 
@@ -121,8 +136,8 @@ var select = edge.func('sql', {
 
 // MySQL
 var selectMySql = edge.func('sql', {
-    source: 'select top * from Products limit 10',
-    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI',
+    source: 'select * from Products limit 10',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
     commandTimeout: 100,
     db: 'mysql'
 });
@@ -170,10 +185,11 @@ Result
   ]
 }
 ```
- 
-#### Stored proc with input parameters  
+### Stored procedures MS SQL and MySQL 
 
- ```js
+#### Stored procedure with input parameters  
+
+```js
 const edge = require('edge-js');
 
 var params = {inputParm1: 'input1', inputParam2: 25};
@@ -196,7 +212,8 @@ execProc(params, function (error, result) {
     console.log(result);
 });
 ```
-#### Stored proc with output parameters
+
+#### Stored procedure with output parameters
 
 Example SQL 
 
@@ -226,7 +243,7 @@ END
 ```sql
 CREATE Table Authors
 (
-    Id int not null,
+    Id INT NOT NULL AUTO_INCREMENT,
     Name nvarchar(50),
     Country nvarchar(50),
     PRIMARY KEY (Id)
@@ -246,7 +263,7 @@ END;
 Javascript
 
 * Return parameter ***names*** must start with ***@returnParam*** 
-* Return parameter ***values*** must correspond to stored proc output names
+* Return parameter ***values*** must correspond to stored procedure output names
 * Return parameters will be treated as ***nvarchar(max)*** for MS SQL or ***varchar(max)*** for MySQL
 * Result will return stored proc output names <br/> <br/>  
   
@@ -288,3 +305,5 @@ Result
 // MySQL
 { AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
 ```
+
+### Stored procedures and functions PostgreSQL

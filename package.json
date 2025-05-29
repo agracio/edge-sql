@@ -1,5 +1,5 @@
 {
-  "name": "edge-sql",
+  "name": "@agracio/edge-sql",
   "author": {
     "name": "Tomasz Janczuk <tomasz@janczuk.org>",
     "url": "http://tomasz.janczuk.org",
@@ -19,7 +19,8 @@
     ".net",
     "ado.net",
     "sql-server",
-    "ms-sql"
+    "ms-sql",
+    "mysql"
   ],
   "keywords": [
     "edge",
@@ -33,7 +34,8 @@
     ".net",
     "ado.net",
     "sql-server",
-    "ms-sql"
+    "ms-sql",
+    "mysql"
   ],
   "main": "./lib/edge-sql.js",
   "engines": {

@@ -5,17 +5,16 @@ using System.Data.Common;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace DefaultNamespace;
 
 public abstract class Query
 {
-    public abstract Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null);
+    public abstract Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null, bool nonQuery = false);
 
     public abstract Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null);
 
-    public abstract Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, bool nonQuery, int? commandTimeout = null);
+    public abstract Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null, bool nonQuery = false);
     
     protected async Task<object> ExecuteQuery(DbCommand command, DbConnection connection, int? commandTimeout = null)
     {
@@ -61,6 +60,7 @@ public abstract class Query
                     for (int i = 0; i < record.FieldCount; i++)
                     {      
                         Type type = record.GetFieldType(i);
+
                         if (resultRecord[i] is DBNull)
                         {
                             resultRecord[i] = null;
@@ -83,6 +83,12 @@ public abstract class Query
                         {
                             resultRecord[i] = "<IDataReader>";
                         }
+                        else if (type == typeof(Microsoft.SqlServer.Types.SqlGeometry) 
+                                 || type == typeof(Microsoft.SqlServer.Types.SqlGeography)  
+                                 )
+                        {
+                            resultRecord[i] = resultRecord[i].ToString();;
+                        }
 
                         dataObject.Add(record.GetName(i), resultRecord[i]);
                     }
@@ -103,7 +109,7 @@ public abstract class Query
         return await command.ExecuteNonQueryAsync();
     }
     
-    protected async Task<object> ExecuteStoredProcedure(DbCommand command, DbConnection connection, bool nonQuery, int? commandTimeout = null)
+    protected async Task<object> ExecuteStoredProcedure(DbCommand command, DbConnection connection, bool nonQuery = false, int? commandTimeout = null)
     {
         command.CommandType = CommandType.StoredProcedure;
         return nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
