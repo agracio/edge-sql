@@ -24,9 +24,13 @@ public class PgSqlQuery: Query
     public override async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null, bool nonQuery = false)
     {
         using var connection = new NpgsqlConnection(connectionString);
-        using var command = new NpgsqlCommand(commandString, connection);
-        AddParameters(command, parameters);
-        return nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
+        var command = new NpgsqlCommand(commandString, connection);
+        // command.AllResultTypesAreUnknown = true;
+        using (command)
+        {
+            AddParameters(command, parameters);
+            return nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
+        }
     }
 
     public override async Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)

@@ -6,8 +6,7 @@ namespace test;
 public class PgSqlTests
 {
     private readonly SqlTests _tests = new();
-    private readonly EdgeCompiler _compiler = new();
-    private readonly IDictionary<string, object> _parameters = new Dictionary<string, object>()
+    private readonly IDictionary<string, object> _parameters = new Dictionary<string, object>
     {
         { "connectionString", Environment.GetEnvironmentVariable("PGSQL")},
         { "commandTimeout", 30 },
@@ -35,10 +34,10 @@ public class PgSqlTests
         _tests.SelectMultipleTables(_parameters);
     }
     
-    [Test, Ignore("Geometry support in MySQL is not implemented.")]
+    [Test]
     public void SelectGeometry()
     {
-        _parameters["source"] = "select * from SpatialTable";
+        _parameters["source"] = "select id, ST_AsText(GeomCol1) as GeomCol1, GeomCol2 from SpatialTable";
         _tests.SelectGeometry(_parameters);
     }
     

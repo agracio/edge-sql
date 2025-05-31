@@ -6,7 +6,6 @@ namespace test;
 public class MsSqlTests
 {
     private readonly SqlTests _tests = new();
-    private readonly EdgeCompiler _compiler = new();
     private readonly IDictionary<string, object> _parameters = new Dictionary<string, object>()
     {
         { "connectionString", Environment.GetEnvironmentVariable("MSSQL")},
@@ -39,7 +38,7 @@ public class MsSqlTests
     public void SelectGeometry()
     {
         _parameters["source"] = "select * from SpatialTable";
-        _tests.SelectGeometry(_parameters);
+        _tests.SelectGeometryMsSql(_parameters);
     }
     
     [Test]
