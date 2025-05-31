@@ -37,7 +37,7 @@ public class MySqlTests
     [Test]
     public void SelectGeometry()
     {
-        _parameters["source"] = "select id, ST_AsText(GeomCol1) as GeomCol1, GeomCol2 from SpatialTable";
+        _parameters["source"] = "select id, ST_AsText(GeomCol) as GeomCol, GeomColSTA from SpatialTable limit 2";
         _tests.SelectGeometry(_parameters);
     }
     

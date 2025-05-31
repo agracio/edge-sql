@@ -37,7 +37,7 @@ public class MsSqlTests
     [Test]
     public void SelectGeometry()
     {
-        _parameters["source"] = "select * from SpatialTable";
+        _parameters["source"] = "select top 2 * from SpatialTable";
         _tests.SelectGeometryMsSql(_parameters);
     }
     

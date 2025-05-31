@@ -12,11 +12,17 @@
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
-### Geometry and Geography types
+### Geometry and Geography types 
 
 #### MS SQL
-- Supports only querying but not inserting/updating. Geometry and Geography types are returned as strings in WKT format.
+- Supports only querying. Geometry and Geography types are returned as strings in WKT format.
 - Supported only when using .NET Core.
+
+#### MySQL and PostgreSQL
+- Supports querying using `ST_AsText` function to convert Geometry and Geography types to WKT format.
+
+**[How to use Geometry and Geography types](#Geometry-and-Geography-types)**
+
 
 ### Supported .NET frameworks
 * .NET 4.6.2
@@ -304,6 +310,72 @@ Result
 
 // MySQL
 { AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
+```
+
+### Geometry and Geography types
+
+SQL
+```sql
+-- MS SQL
+CREATE TABLE SpatialTable
+    (id int IDENTITY (1,1),
+    GeomCol geometry)
+GO
+
+INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0));
+
+--MySQL
+CREATE TABLE SpatialTable (
+    Id INT  NOT NULL AUTO_INCREMENT,
+    GeomCol GEOMETRY,
+    PRIMARY KEY (Id)
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+
+-- PostgreSQL
+CREATE TABLE SpatialTable
+(
+    Id int generated always as identity primary key,
+    GeomCol GEOMETRY
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+```
+Javascript
+```js
+const edge = require('edge-js');
+
+// MS SQL
+var getSpatialData = edge.func('sql', {
+    source: 'select GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+// MySQL
+var getSpatialDataMySql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
+});
+
+// PostgreSQL
+var getSpatialDataPgSql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+```
+
+Result
+
+```js
+// MS SQL
+[{GeomCol:'LINESTRING (100 100, 20 180, 180 180)'}]
+    
+// MySQL and PostgreSQL
+[{GeomCol:'LINESTRING(100 100,20 180,180 180)'}]
+
 ```
 
 ### Stored procedures and functions PostgreSQL

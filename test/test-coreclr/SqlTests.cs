@@ -32,14 +32,14 @@ public class SqlTests
     {
         var func = _compiler.CompileFunc(parameters);
         var result = func.Invoke(null).Result;
-        StringAssert.AreEqualIgnoringCase("[{\"id\":1,\"GeomCol1\":\"LINESTRING (100 100, 20 180, 180 180)\",\"GeomCol2\":\"LINESTRING (100 100, 20 180, 180 180)\"},{\"id\":2,\"GeomCol1\":\"POLYGON ((0 0, 150 0, 150 150, 0 150, 0 0))\",\"GeomCol2\":\"POLYGON ((0 0, 150 0, 150 150, 0 150, 0 0))\"}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
+        StringAssert.AreEqualIgnoringCase("[{\"id\":1,\"GeomCol\":\"LINESTRING (100 100, 20 180, 180 180)\",\"GeomColSTA\":\"LINESTRING (100 100, 20 180, 180 180)\"},{\"id\":2,\"GeomCol\":\"POLYGON ((0 0, 150 0, 150 150, 0 150, 0 0))\",\"GeomColSTA\":\"POLYGON ((0 0, 150 0, 150 150, 0 150, 0 0))\"}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
     }
     
     public void SelectGeometry(IDictionary<string, object> parameters)
     {
         var func = _compiler.CompileFunc(parameters);
         var result = func.Invoke(null).Result;
-        StringAssert.AreEqualIgnoringCase("[{\"id\":1,\"GeomCol1\":\"LINESTRING(100 100,20 180,180 180)\",\"GeomCol2\":\"LINESTRING(100 100,20 180,180 180)\"},{\"id\":2,\"GeomCol1\":\"POLYGON((0 0,150 0,150 150,0 150,0 0))\",\"GeomCol2\":\"POLYGON((0 0,150 0,150 150,0 150,0 0))\"}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
+        StringAssert.AreEqualIgnoringCase("[{\"id\":1,\"GeomCol\":\"LINESTRING(100 100,20 180,180 180)\",\"GeomColSTA\":\"LINESTRING(100 100,20 180,180 180)\"},{\"id\":2,\"GeomCol\":\"POLYGON((0 0,150 0,150 150,0 150,0 0))\",\"GeomColSTA\":\"POLYGON((0 0,150 0,150 150,0 150,0 0))\"}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
     }
     
     public void Proc(IDictionary<string, object> parameters)
