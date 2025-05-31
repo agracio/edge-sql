@@ -59,7 +59,7 @@ public class SqlTests
     public void ProcPgSqlOut(IDictionary<string, object> parameters)
     {
         var func = _compiler.CompileFunc(parameters);
-        var result = func.Invoke("{ \"authorId\": 1, \"@returnParam1\" : \"AuthorName\", \"@returnParam2\" : \"AuthorCountry\"}").Result;
+        var result = func.Invoke("{ \"authorId\": 1, \"@returnParam1\" : \"\", \"@returnParam2\" : \"\"}").Result;
         StringAssert.AreEqualIgnoringCase("[{\"AuthorName\":\"Author - 1\",\"AuthorCountry\":\"Country - 1\"}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
     }
     
