@@ -49,6 +49,9 @@ build.js
 
 lib/System.*
 lib/sni.dll
-!lib/System.Data.SqlClient.*
+lib/System.Data.SqlClient.*
 !lib/System.Configuration.ConfigurationManager.*
 !lib/System.Security.Permissions.*
+!lib/System.Diagnostics.EventLog.*
+!lib/System.Security.Cryptography.ProtectedData.*
+!lib/System.Windows.Extensions.*
