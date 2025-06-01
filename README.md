@@ -18,14 +18,16 @@ Only supported when using .NET Core.
 ### Geometry and Geography types 
 
 #### MS SQL
-- Supports only querying. Geometry and Geography types are returned as strings in WKT format.
+- Supports querying, inserting and updating. Geometry and Geography types are returned as strings in WKT format.
 - Supported only when using .NET Core.
 
 #### MySQL and PostgreSQL
 - Supports querying using `ST_AsText` function to convert Geometry and Geography types to WKT format.
+- Supports inserting Geometry and Geography types using `ST_GeomFromText` function.
+- Supports updating Geometry and Geography in PostgeSQL.
+- Updating Geometry and Geography types is not supported in MySQL.
 
 **[How to use Geometry and Geography types](#Geometry-and-Geography-types)**
-
 
 ### Supported .NET frameworks
 * .NET 4.6.2 (does not support PostgreSQL and Geometry/Geography)
@@ -66,6 +68,9 @@ Only supported when using .NET Core.
 npm install edge-js
 npm install edge-sql
 ```
+
+### Connection string
+
 #### You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
 
 #### Windows
@@ -149,6 +154,14 @@ var selectMySql = edge.func('sql', {
     connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
     commandTimeout: 100,
     db: 'mysql'
+});
+
+// PostgreSQL
+var selectPgSql = edge.func('sql', {
+    source: 'select * from Products limit 10',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    commandTimeout: 100,
+    db: 'pgsql'
 });
 
 select(null, function (error, result) {
@@ -235,6 +248,8 @@ CREATE Table Authors
    Country nvarchar(50)
 )
 
+INSERT INTO Authors(Name, Country) VALUES ('Author - 1', 'Country - 1');
+
 CREATE PROCEDURE GetAuthorDetails
 (
     @AuthorID INT,
@@ -257,6 +272,8 @@ CREATE Table Authors
     Country nvarchar(50),
     PRIMARY KEY (Id)
 );
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
 
 CREATE PROCEDURE GetAuthorDetails
 (
@@ -315,71 +332,6 @@ Result
 { AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
 ```
 
-### Geometry and Geography types
-
-SQL
-```sql
--- MS SQL
-CREATE TABLE SpatialTable
-    (id int IDENTITY (1,1),
-    GeomCol geometry)
-GO
-
-INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0));
-
---MySQL
-CREATE TABLE SpatialTable (
-    Id INT  NOT NULL AUTO_INCREMENT,
-    GeomCol GEOMETRY,
-    PRIMARY KEY (Id)
-);
-
-INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
-
--- PostgreSQL
-CREATE TABLE SpatialTable
-(
-    Id int generated always as identity primary key,
-    GeomCol GEOMETRY
-);
-
-INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
-```
-Javascript
-```js
-const edge = require('edge-js');
-
-// MS SQL
-var getSpatialData = edge.func('sql', {
-    source: 'select GeomCol from SpatialTable',
-    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
-});
-
-// MySQL
-var getSpatialDataMySql = edge.func('sql', {
-    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
-    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
-    db: 'mysql'
-});
-
-// PostgreSQL
-var getSpatialDataPgSql = edge.func('sql', {
-    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
-    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
-    db: 'pgsql'
-});
-```
-
-Result
-
-```js
-// MS SQL
-[{GeomCol:'LINESTRING (100 100, 20 180, 180 180)'}]
-    
-// MySQL and PostgreSQL
-[{GeomCol:'LINESTRING(100 100,20 180,180 180)'}]
-
-```
 
 ### Stored procedures and functions PostgreSQL
 
@@ -438,7 +390,7 @@ var execProc = edge.func('sql', {
     db: 'pgsql'
 });
 
-execProc({authorid: 1}, function (error, result) {
+execProc({authorid: 1, '@returnParam1':'', '@returnParam2':''}, function (error, result) {
     if (error) throw error;
     console.log(result);
 });
@@ -446,7 +398,7 @@ execProc({authorid: 1}, function (error, result) {
 Result
 
 ```js
-{ AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
+[{"authorname":"Author - 1","authorcountry":"Country - 1"}]
 ```
 
 #### Function
@@ -503,19 +455,161 @@ func({authorid: 1}, function (error, result) {
 Result
 
 ```js
-[
-    {
-        "id": 1,
-        "author_id": 1,
-        "name": "book - 1",
-        "price": 10
-    },
-    {
-        "id": 2,
-        "author_id": 1,
-        "name": "book - 2",
-        "price": 20
-    }
-]                        
+[{"id":3,"author_id":2,"name":"Book - 1","price":10},{"id":4,"author_id":2,"name":"Book - 2","price":20}]                    
 ```
+
+
+### Geometry and Geography types
+
+#### Querying Geometry and Geography types
+
+SQL
+```sql
+-- MS SQL
+CREATE TABLE SpatialTable
+    (id int IDENTITY (1,1),
+    GeomCol geometry)
+GO
+
+INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0));
+
+--MySQL
+CREATE TABLE SpatialTable (
+    Id INT  NOT NULL AUTO_INCREMENT,
+    GeomCol GEOMETRY,
+    PRIMARY KEY (Id)
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+
+-- PostgreSQL
+CREATE TABLE SpatialTable
+(
+    Id int generated always as identity primary key,
+    GeomCol GEOMETRY
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+```
+Javascript
+```js
+const edge = require('edge-js');
+
+// MS SQL
+var getSpatialData = edge.func('sql', {
+    source: 'select GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+getSpatialData(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// MySQL
+var getSpatialDataMySql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
+});
+
+getSpatialDataMySql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var getSpatialDataPgSql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+getSpatialDataPgSql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+```
+
+Result
+
+```js
+// MS SQL
+[{GeomCol:'LINESTRING (100 100, 20 180, 180 180)'}]
+    
+// MySQL and PostgreSQL
+[{GeomCol:'LINESTRING(100 100,20 180,180 180)'}]
+
+```
+
+#### Inserting Geometry and Geography types
+
+```js   
+const edge = require('edge-js');
+
+// MS SQL
+var insertSpatialData = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\', 0))',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+insertSpatialData(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// MySQL
+var insertSpatialDataMySql = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable VALUES (default,ST_GeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\',0), default)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
+});
+
+insertSpatialDataMySql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var insertSpatialDataPgSql = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable VALUES (default,ST_GeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\',0), default)',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+insertSpatialDataPgSql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+````
+
+#### Updating Geometry and Geography types - MS-SQL and PostgeSQL only
+
+```js   
+const edge = require('edge-js');
+
+// MS SQL
+var updateSpatialData = edge.func('sql', {
+    source: 'UPDATE SpatialTable set GeomCol = @newValue where id = @id',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+updateSpatialData({ id: 1, newValue: 'POINT(10 10)' }, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var updateSpatialDataPgSql = edge.func('sql', {
+    source: 'UPDATE SpatialTable set GeomCol = @newValue where id = @id',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+updateSpatialDataPgSql({ id: 1, newValue: 'POINT(10 10)' }, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+````
 

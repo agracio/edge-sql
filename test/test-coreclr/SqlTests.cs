@@ -67,6 +67,8 @@ public class SqlTests
     {
         var func = _compiler.CompileFunc(parameters);
         var result = func.Invoke("{ \"authorId\": 2 }").Result;
+        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(result));
+
         StringAssert.AreEqualIgnoringCase("[{\"Id\":3,\"Author_Id\":2,\"Name\":\"Book - 1\",\"Price\":10},{\"Id\":4,\"Author_Id\":2,\"Name\":\"Book - 2\",\"Price\":20}]", Newtonsoft.Json.JsonConvert.SerializeObject(result));
     }
 }
