@@ -12,6 +12,9 @@
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
+### PosgtgreSQL
+Only supported when using .NET Core.
+
 ### Geometry and Geography types 
 
 #### MS SQL
@@ -25,7 +28,7 @@
 
 
 ### Supported .NET frameworks
-* .NET 4.6.2
+* .NET 4.6.2 (does not support PostgreSQL and Geometry/Geography)
 * .NET Core - netstandard 2.0
 
 ### SQL statement interpretation (statement starts with...)
@@ -379,3 +382,140 @@ Result
 ```
 
 ### Stored procedures and functions PostgreSQL
+
+#### Stored procedure with input parameters
+
+```js
+const edge = require('edge-js');
+
+var params = {inputParm1: 'input1', inputParam2: 25};
+
+var execProc = edge.func('sql', {
+    source: 'call myStoredProc(@inputParm1, @inputParam2)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+execProc(params, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+
+#### Stored procedure with output parameters
+
+Example SQL
+
+```sql
+CREATE Table Authors
+(
+    Id int generated always as identity primary key,
+    Name varchar(50),
+    Country varchar(50)
+);
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
+
+CREATE PROCEDURE GetAuthorDetails
+(
+    IN AuthorId int,
+    OUT AuthorName varchar(50),
+    OUT AuthorCountry varchar(50)
+)
+AS $$
+BEGIN
+    SELECT Name, Country into AuthorName, AuthorCountry FROM Authors WHERE Id = AuthorId;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+```js
+const edge = require('edge-js');
+
+var execProc = edge.func('sql', {
+    source: 'call GetAuthorDetails(@authorId, @returnParam1, @returnParam2)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+execProc({authorid: 1}, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+Result
+
+```js
+{ AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
+```
+
+#### Function
+Example SQL
+
+```sql
+CREATE Table Authors
+(
+    Id int generated always as identity primary key,
+    Name varchar(50),
+    Country varchar(50)
+);
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
+
+CREATE Table Books
+(
+    Id int generated always as identity primary key,
+    Author_Id int,
+    Name varchar(50),
+    Price int,
+    FOREIGN KEY (Author_id)
+        REFERENCES Authors(id)
+);
+
+INSERT INTO Books(Id, Author_Id, Name, Price) VALUES (default, 1, 'Book - 1', 10);
+INSERT INTO Books(Id, Author_Id, Name, Price) VALUES (default, 1, 'Book - 2', 20);
+
+CREATE FUNCTION GetBooksByAuthor(AuthorId integer)
+RETURNS table(Id int, Author_Id int, Name varchar(50), Price int)
+AS $$
+
+BEGIN
+    return query SELECT * FROM Books WHERE Books.Author_id = AuthorId;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+```js
+const edge = require('edge-js');
+
+var func = edge.func('sql', {
+    source: 'select * from GetBooksByAuthor(@authorId)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+func({authorid: 1}, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+
+Result
+
+```js
+[
+    {
+        "id": 1,
+        "author_id": 1,
+        "name": "book - 1",
+        "price": 10
+    },
+    {
+        "id": 2,
+        "author_id": 1,
+        "name": "book - 2",
+        "price": 20
+    }
+]                        
+```
+

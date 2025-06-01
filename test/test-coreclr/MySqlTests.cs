@@ -6,7 +6,7 @@ namespace test;
 public class MySqlTests
 {
     private readonly SqlTests _tests = new();
-    private readonly IDictionary<string, object> _parameters = new Dictionary<string, object>()
+    private readonly IDictionary<string, object> _parameters = new Dictionary<string, object>
     {
         { "connectionString", Environment.GetEnvironmentVariable("MYSQL")},
         { "commandTimeout", 30 },
