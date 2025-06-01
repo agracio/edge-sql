@@ -473,7 +473,7 @@ GO
 
 INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0));
 
---MySQL
+-- MySQL
 CREATE TABLE SpatialTable (
     Id INT  NOT NULL AUTO_INCREMENT,
     GeomCol GEOMETRY,
@@ -584,7 +584,7 @@ insertSpatialDataPgSql(null, function (error, result) {
 });
 ````
 
-#### Updating Geometry and Geography types - MS-SQL and PostgeSQL only
+#### Updating Geometry and Geography types - MS SQL and PostgeSQL only
 
 ```js   
 const edge = require('edge-js');
