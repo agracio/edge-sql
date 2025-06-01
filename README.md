@@ -455,7 +455,7 @@ func({authorid: 1}, function (error, result) {
 Result
 
 ```js
-[{"id":3,"author_id":2,"name":"Book - 1","price":10},{"id":4,"author_id":2,"name":"Book - 2","price":20}]                    
+[{"id":1,"author_id":1,"name":"Book - 1","price":10},{"id":2,"author_id":1,"name":"Book - 2","price":20}]
 ```
 
 
