@@ -29,12 +29,12 @@ public class MsSqlQuery: Query
         }
     }
 
-    public override async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
+    public override async Task<object> ExecuteQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null, bool nonQuery = false)
     {
         using var connection = new SqlConnection(connectionString);
         using var command = new SqlCommand(commandString, connection);
         AddParameters(command, parameters);
-        return await ExecuteQuery(command, connection, commandTimeout);
+        return nonQuery ? await ExecuteNonQuery(command, connection, commandTimeout) : await ExecuteQuery(command, connection, commandTimeout);
     }
     
     public override async Task<object> ExecuteNonQuery(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null)
@@ -45,7 +45,7 @@ public class MsSqlQuery: Query
         return await ExecuteNonQuery(command, connection, commandTimeout);
     }
     
-    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, bool nonQuery, int? commandTimeout = null)
+    public override async Task<object> ExecuteStoredProcedure(string connectionString, string commandString, IDictionary<string, object> parameters, int? commandTimeout = null, bool nonQuery = false)
     {
         using (SqlConnection connection = new SqlConnection(connectionString))
         {

@@ -1,57 +1,88 @@
 ## edge-sql
 
-### MS SQL Server and MySQL compiler for [Edge.js](https://github.com/agracio/edge-js). 
+### MS SQL, MySQL and PostgreSQL compiler for [Edge.js](https://github.com/agracio/edge-js). 
 
 ### This library is based on https://github.com/tjanczuk/edge-sql all credit for original work goes to Tomasz Janczuk. 
+
 -------
 
 ## Overview
-* Supports MS SQL and MySQL
+* Supports MS SQL, MySQL, PostgreSQL
 * Supports returning multiple results from queries
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
-**NOTE** SQL Server Geography and Geometry types are not supported.
+### PosgtgreSQL
+Only supported when using .NET Core.
+
+### Geometry and Geography types 
+
+#### MS SQL
+- Supports querying, inserting and updating. Geometry and Geography types are returned as strings in WKT format.
+- Supported only when using .NET Core.
+
+#### MySQL and PostgreSQL
+- Supports querying using `ST_AsText` function to convert Geometry and Geography types to WKT format.
+- Supports inserting Geometry and Geography types using `ST_GeomFromText` function.
+- Supports updating Geometry and Geography in PostgeSQL.
+- Updating Geometry and Geography types is not supported in MySQL.
+
+**[How to use Geometry and Geography types](#Geometry-and-Geography-types)**
 
 ### Supported .NET frameworks
-* .NET 4.6.2
+* .NET 4.6.2 (does not support PostgreSQL and Geometry/Geography)
 * .NET Core - netstandard 2.0
 
 ### SQL statement interpretation (statement starts with...)
 
-| SQL Statement     | C# Implemetation     |
-|-------------------| -------------------- |
-| select            | ExecuteReaderAsync   |
+| SQL Statement     | C# Implementation    |
+|-------------------|----------------------|
+| select            | ExecuteReaderAsync*  |
 | update            | ExecuteNonQueryAsync |
 | insert            | ExecuteNonQueryAsync |
 | delete            | ExecuteNonQueryAsync |
 | exec/execute/call | ExecuteReaderAsync*  |
-| other             | ExecuteReaderAsync   |
+| none of the above | ExecuteReaderAsync*  |
 
-***Stored procedures with output parameters are executed using ExecuteNonQueryAsync, see examples below**
+***MS SQL and MySQL stored procedures with output parameters are executed using ExecuteNonQueryAsync.**  
+***Can be overriden using `nonQuery` option.**
 
 ### Options
 
-| Option             | Default | Usage                                                        |
-|--------------------|---------|--------------------------------------------------------------|
-| `connectionString` |         | Required. Use environment variable or input option.          |
-| `source`           |         | Optional if no other options are specified.                  |
-| `commandTimeout`   |         | Optional, if specified will be applied to DbCommand instance |
-| `db`               | mssql   | Can be 'mssql' or 'mysql'. Not case sensitive.               |
-| `nonQuery`         | false   | Force stored procedure to run as ExecuteNonQueryAsync        |
+| Option             | Default | Usage                                                                   |
+|--------------------|---------|-------------------------------------------------------------------------|
+| `connectionString` |         | Required. Use environment variable or input option.                     |
+| `source`           |         | Optional if no other options are specified.                             |
+| `commandTimeout`   |         | Optional, if specified will be applied to DbCommand instance.           |
+| `db`               | 'MsSql' | Can be 'MsSql', 'MySql', 'PgSql'. Not case sensitive.                   |
+| `nonQuery`         |  false  | Force certain queries to run as ExecuteNonQueryAsync depending on `db`. |
 
-### Simple queries without options
+#### `nonQuery`
+ - If set to true when calling stored procedure will force it to run as ExecuteNonQueryAsync.
+ - For PostgreSQL can also be used to force `select` statement to run as ExecuteNonQueryAsync when calling functions. 
+ - If set to true when calling 'other' SQL statements will force it to run as ExecuteNonQueryAsync.
+
+## Usage 
 
 ```bash
 npm install edge-js
 npm install edge-sql
 ```
 
-You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
+### Connection string
 
+#### You can set your SQL connection string using environment variable. For passing connection string as an option see [Using options](#using-options).
+
+#### Windows
 ```
 set EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;Integrated Security=True
 ```
+#### Linux/macOS
+```
+export EDGE_SQL_CONNECTION_STRING=Data Source=localhost;Initial Catalog=Northwind;Integrated Security=True
+```
+
+### Simple queries without options - MS SQL only
 
 #### Simple select
 
@@ -107,8 +138,6 @@ updateProductName({ myProductId: 10, newName: 'New Product' }, function (error, 
 
 ### Using options
 
-#### Passing options to function
-
 ```js
 const edge = require('edge-js');
 
@@ -121,10 +150,18 @@ var select = edge.func('sql', {
 
 // MySQL
 var selectMySql = edge.func('sql', {
-    source: 'select top * from Products limit 10',
-    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI',
+    source: 'select * from Products limit 10',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
     commandTimeout: 100,
     db: 'mysql'
+});
+
+// PostgreSQL
+var selectPgSql = edge.func('sql', {
+    source: 'select * from Products limit 10',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    commandTimeout: 100,
+    db: 'pgsql'
 });
 
 select(null, function (error, result) {
@@ -170,10 +207,11 @@ Result
   ]
 }
 ```
- 
-#### Stored proc with input parameters  
+### Stored procedures MS SQL and MySQL 
 
- ```js
+#### Stored procedure with input parameters  
+
+```js
 const edge = require('edge-js');
 
 var params = {inputParm1: 'input1', inputParam2: 25};
@@ -196,7 +234,8 @@ execProc(params, function (error, result) {
     console.log(result);
 });
 ```
-#### Stored proc with output parameters
+
+#### Stored procedure with output parameters
 
 Example SQL 
 
@@ -208,6 +247,8 @@ CREATE Table Authors
    Name nvarchar(50),
    Country nvarchar(50)
 )
+
+INSERT INTO Authors(Name, Country) VALUES ('Author - 1', 'Country - 1');
 
 CREATE PROCEDURE GetAuthorDetails
 (
@@ -226,11 +267,13 @@ END
 ```sql
 CREATE Table Authors
 (
-    Id int not null,
+    Id INT NOT NULL AUTO_INCREMENT,
     Name nvarchar(50),
     Country nvarchar(50),
     PRIMARY KEY (Id)
 );
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
 
 CREATE PROCEDURE GetAuthorDetails
 (
@@ -246,7 +289,7 @@ END;
 Javascript
 
 * Return parameter ***names*** must start with ***@returnParam*** 
-* Return parameter ***values*** must correspond to stored proc output names
+* Return parameter ***values*** must correspond to stored procedure output names
 * Return parameters will be treated as ***nvarchar(max)*** for MS SQL or ***varchar(max)*** for MySQL
 * Result will return stored proc output names <br/> <br/>  
   
@@ -288,3 +331,285 @@ Result
 // MySQL
 { AuthorName: 'Author - 1', AuthorCountry: 'Country - 1' }
 ```
+
+
+### Stored procedures and functions PostgreSQL
+
+#### Stored procedure with input parameters
+
+```js
+const edge = require('edge-js');
+
+var params = {inputParm1: 'input1', inputParam2: 25};
+
+var execProc = edge.func('sql', {
+    source: 'call myStoredProc(@inputParm1, @inputParam2)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+execProc(params, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+
+#### Stored procedure with output parameters
+
+Example SQL
+
+```sql
+CREATE Table Authors
+(
+    Id int generated always as identity primary key,
+    Name varchar(50),
+    Country varchar(50)
+);
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
+
+CREATE PROCEDURE GetAuthorDetails
+(
+    IN AuthorId int,
+    OUT AuthorName varchar(50),
+    OUT AuthorCountry varchar(50)
+)
+AS $$
+BEGIN
+    SELECT Name, Country into AuthorName, AuthorCountry FROM Authors WHERE Id = AuthorId;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+```js
+const edge = require('edge-js');
+
+var execProc = edge.func('sql', {
+    source: 'call GetAuthorDetails(@authorId, @returnParam1, @returnParam2)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+execProc({authorid: 1, '@returnParam1':'', '@returnParam2':''}, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+Result
+
+```js
+[{"authorname":"Author - 1","authorcountry":"Country - 1"}]
+```
+
+#### Function
+Example SQL
+
+```sql
+CREATE Table Authors
+(
+    Id int generated always as identity primary key,
+    Name varchar(50),
+    Country varchar(50)
+);
+
+INSERT INTO Authors(Name, Country) VALUES (default, 'Author - 1', 'Country - 1');
+
+CREATE Table Books
+(
+    Id int generated always as identity primary key,
+    Author_Id int,
+    Name varchar(50),
+    Price int,
+    FOREIGN KEY (Author_id)
+        REFERENCES Authors(id)
+);
+
+INSERT INTO Books(Id, Author_Id, Name, Price) VALUES (default, 1, 'Book - 1', 10);
+INSERT INTO Books(Id, Author_Id, Name, Price) VALUES (default, 1, 'Book - 2', 20);
+
+CREATE FUNCTION GetBooksByAuthor(AuthorId integer)
+RETURNS table(Id int, Author_Id int, Name varchar(50), Price int)
+AS $$
+
+BEGIN
+    return query SELECT * FROM Books WHERE Books.Author_id = AuthorId;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+```js
+const edge = require('edge-js');
+
+var func = edge.func('sql', {
+    source: 'select * from GetBooksByAuthor(@authorId)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'pgsql'
+});
+
+func({authorid: 1}, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+```
+
+Result
+
+```js
+[{"id":3,"author_id":2,"name":"Book - 1","price":10},{"id":4,"author_id":2,"name":"Book - 2","price":20}]                    
+```
+
+
+### Geometry and Geography types
+
+#### Querying Geometry and Geography types
+
+SQL
+```sql
+-- MS SQL
+CREATE TABLE SpatialTable
+    (id int IDENTITY (1,1),
+    GeomCol geometry)
+GO
+
+INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0));
+
+--MySQL
+CREATE TABLE SpatialTable (
+    Id INT  NOT NULL AUTO_INCREMENT,
+    GeomCol GEOMETRY,
+    PRIMARY KEY (Id)
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+
+-- PostgreSQL
+CREATE TABLE SpatialTable
+(
+    Id int generated always as identity primary key,
+    GeomCol GEOMETRY
+);
+
+INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
+```
+Javascript
+```js
+const edge = require('edge-js');
+
+// MS SQL
+var getSpatialData = edge.func('sql', {
+    source: 'select GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+getSpatialData(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// MySQL
+var getSpatialDataMySql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
+});
+
+getSpatialDataMySql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var getSpatialDataPgSql = edge.func('sql', {
+    source: 'select ST_AsText(GeomCol) as GeomCol from SpatialTable',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+getSpatialDataPgSql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+```
+
+Result
+
+```js
+// MS SQL
+[{GeomCol:'LINESTRING (100 100, 20 180, 180 180)'}]
+    
+// MySQL and PostgreSQL
+[{GeomCol:'LINESTRING(100 100,20 180,180 180)'}]
+
+```
+
+#### Inserting Geometry and Geography types
+
+```js   
+const edge = require('edge-js');
+
+// MS SQL
+var insertSpatialData = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable (GeomCol) VALUES (geometry::STGeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\', 0))',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+insertSpatialData(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// MySQL
+var insertSpatialDataMySql = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable VALUES (default,ST_GeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\',0), default)',
+    connectionString: 'SERVER=myserver;uid=myuser;pwd=mypassword;database=testDb;',
+    db: 'mysql'
+});
+
+insertSpatialDataMySql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var insertSpatialDataPgSql = edge.func('sql', {
+    source: 'INSERT INTO SpatialTable VALUES (default,ST_GeomFromText(\'LINESTRING (100 100, 20 180, 180 180)\',0), default)',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+insertSpatialDataPgSql(null, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+````
+
+#### Updating Geometry and Geography types - MS-SQL and PostgeSQL only
+
+```js   
+const edge = require('edge-js');
+
+// MS SQL
+var updateSpatialData = edge.func('sql', {
+    source: 'UPDATE SpatialTable set GeomCol = @newValue where id = @id',
+    connectionString: 'SERVER=myserver;DATABASE=mydatabase;Integrated Security=SSPI'
+});
+
+updateSpatialData({ id: 1, newValue: 'POINT(10 10)' }, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+
+// PostgreSQL
+var updateSpatialDataPgSql = edge.func('sql', {
+    source: 'UPDATE SpatialTable set GeomCol = @newValue where id = @id',
+    connectionString: 'SERVER=myserver;Database=mydatabase;Username=myuser;Password=mypassword;',
+    db: 'pgsql'
+});
+
+updateSpatialDataPgSql({ id: 1, newValue: 'POINT(10 10)' }, function (error, result) {
+    if (error) throw error;
+    console.log(result);
+});
+````
+

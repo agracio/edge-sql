@@ -3,7 +3,7 @@
     <Description>Edge.js enables scripting CLR languages from Node.js. This package is a dependency of Edge.js and supports scripting SQL from Node.</Description>
     <AssemblyTitle>SQL compiler for Edge.js</AssemblyTitle>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>edge-sql-coreclr</AssemblyName>
     <PackageId>edge-sql-coreclr</PackageId>
     <PackageProjectUrl>https://github.com/agracio/edge-sql</PackageProjectUrl>
@@ -27,10 +27,15 @@
     <Compile Include="..\compiler\MySqlQuery.cs">
       <Link>Query.cs</Link>
     </Compile>
+    <Compile Include="..\compiler\PgSqlQuery.cs">
+      <Link>Query.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="10.50.1600.1" />
     <PackageReference Include="MySql.Data" Version="9.3.0" />
+    <PackageReference Include="Npgsql" Version="8.0.7" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 </Project>

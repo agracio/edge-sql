@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Threading.Tasks;
-using System.Data;
-using System.Data.Common;
-using System.Data.SqlClient;
 using System.IO;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using DefaultNamespace;
-using MySql.Data.MySqlClient;
 
+[assembly: InternalsVisibleTo("test-coreclr")]
 public class EdgeCompiler
 {
     private enum QueryType{
@@ -20,8 +16,15 @@ public class EdgeCompiler
         Proc,
         Other
     }
+    
+    private enum Db{
+        MsSql,
+        MySql,
+        PgSql,
+        Oracle
+    }
 
-    private static IDictionary<string, object> Deserialize(string json)
+    internal IDictionary<string, object> Deserialize(string json)
     {
         try
         {
@@ -40,13 +43,14 @@ public class EdgeCompiler
             throw new Exception("Failed to convert string to IDictionary<string, object> ");
         }
     }
+    
     public Func<object, Task<object>> CompileFunc(IDictionary<string, object> parameters)
     {
         QueryType queryType;
         var command = ((string)parameters["source"]).TrimStart();
         var connectionString = Environment.GetEnvironmentVariable("EDGE_SQL_CONNECTION_STRING");
         int? commandTimeout = null;
-        string db = "mssql";
+        Db db = Db.MsSql;
         bool nonQuery = false;
         Query query = new MsSqlQuery();
 
@@ -76,17 +80,24 @@ public class EdgeCompiler
         {
             if(dbTmp != null)
             {
-                db = dbTmp.ToString().ToLower();
-            }
-            if (db != "mssql" && db != "mysql")
-            {
-                throw new ArgumentException("db must be either 'mssql' or 'mysql'.");
+                if (Enum.TryParse(dbTmp.ToString(), true, out Db dbEnum))
+                {
+                    db = dbEnum;
+                }
+                else
+                {
+                    throw new ArgumentException($"'db' parameter value must be one of the following: {string.Join(",", Enum.GetNames(typeof(Db)))}.\nParameter is not case sensitive.");
+                }
             }
         }
 
-        if (db == "mysql")
+        if (db == Db.MySql)
         {
             query = new MySqlQuery();
+        }
+        else if (db == Db.PgSql)
+        {
+            query = new PgSqlQuery();
         }
 
         if (command.StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
@@ -96,9 +107,11 @@ public class EdgeCompiler
                 query.ExecuteQuery(
                 connectionString, 
                 command, 
-                queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
-                commandTimeout);
+                queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters,
+                commandTimeout,
+                db == Db.PgSql || db == Db.Oracle ? nonQuery : false);
         }
+        
         if (command.StartsWith("insert ", StringComparison.InvariantCultureIgnoreCase)
             || command.StartsWith("update ", StringComparison.InvariantCultureIgnoreCase)
             || command.StartsWith("delete ", StringComparison.InvariantCultureIgnoreCase))
@@ -117,23 +130,45 @@ public class EdgeCompiler
             command.StartsWith("call ", StringComparison.InvariantCultureIgnoreCase))
         {
             var trim = command.StartsWith("execute ", StringComparison.InvariantCultureIgnoreCase) ? 8 : 5;
+
+            if (db == Db.PgSql)
+            {
+                return async (queryParameters) => await 
+                    query.ExecuteQuery(
+                        connectionString, 
+                        command, 
+                        queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters,
+                        commandTimeout,
+                        nonQuery);
+            }
+
             queryType = QueryType.Proc;
             return async (queryParameters) => await
                 query.ExecuteStoredProcedure(
                     connectionString,
                     command.Substring(trim).TrimEnd(),
                     queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters,
-                    nonQuery,
-                    commandTimeout);
+                    commandTimeout,
+                    nonQuery);
         }
 
         queryType = QueryType.Other;
-        // Use ExecuteQuery for any other SQL commands 
+        if (nonQuery)
+        {
+            return async (queryParameters) => await 
+                query.ExecuteNonQuery(
+                    connectionString, 
+                    command, 
+                    queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
+                    commandTimeout);
+        }
+
         return async (queryParameters) => await 
             query.ExecuteQuery(
                 connectionString, 
                 command, 
                 queryParameters is string ? Deserialize(queryParameters.ToString()) : (IDictionary<string, object>)queryParameters, 
-                commandTimeout);
+                commandTimeout,
+                nonQuery);
     }
 }
