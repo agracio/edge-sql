@@ -12,10 +12,10 @@
 * Supports any type of SQL statement allowing to run complex queries that declare variables, temp tables etc...
 * Supports stored procedures with return parameters
 
-### PosgtgreSQL
+### PostgreSQL
 Only supported when using .NET Core.
 
-### Geometry and Geography types 
+### Geometry and Geography data types 
 
 #### MS SQL
 - Supports querying, inserting and updating. Geometry and Geography types are returned as strings in WKT format.
@@ -491,6 +491,7 @@ CREATE TABLE SpatialTable
 
 INSERT INTO SpatialTable VALUES (default, ST_GeomFromText('LINESTRING (100 100, 20 180, 180 180)'));
 ```
+
 Javascript
 ```js
 const edge = require('edge-js');
