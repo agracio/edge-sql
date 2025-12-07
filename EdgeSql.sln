@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "edge-sql-coreclr", "src/edg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-coreclr", "test/test-coreclr/test-coreclr.csproj", "{BC92E7F5-74E1-401E-8EC1-6B3E188DF87C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-net", "test-net\test-net.csproj", "{42F25301-009C-41F0-8BD3-6133BCE6328D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{BC92E7F5-74E1-401E-8EC1-6B3E188DF87C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC92E7F5-74E1-401E-8EC1-6B3E188DF87C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC92E7F5-74E1-401E-8EC1-6B3E188DF87C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42F25301-009C-41F0-8BD3-6133BCE6328D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42F25301-009C-41F0-8BD3-6133BCE6328D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42F25301-009C-41F0-8BD3-6133BCE6328D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42F25301-009C-41F0-8BD3-6133BCE6328D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

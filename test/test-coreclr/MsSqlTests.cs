@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
-
-namespace test;
+using test;
 
 [TestFixture]
 public class MsSqlTests

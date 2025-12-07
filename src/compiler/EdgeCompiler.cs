@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using DefaultNamespace;
 
+[assembly: InternalsVisibleTo("test-net")]
 [assembly: InternalsVisibleTo("test-coreclr")]
 public class EdgeCompiler
 {
@@ -23,7 +24,6 @@ public class EdgeCompiler
         PgSql,
         Oracle
     }
-
     internal IDictionary<string, object> Deserialize(string json)
     {
         try
@@ -95,10 +95,12 @@ public class EdgeCompiler
         {
             query = new MySqlQuery();
         }
+#if NET8_0_OR_GREATER
         else if (db == Db.PgSql)
         {
             query = new PgSqlQuery();
         }
+#endif
 
         if (command.StartsWith("select ", StringComparison.InvariantCultureIgnoreCase))
         {

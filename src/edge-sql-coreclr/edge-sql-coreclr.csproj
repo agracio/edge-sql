@@ -22,20 +22,20 @@
       <Link>Query.cs</Link>
     </Compile>
     <Compile Include="..\compiler\MsSqlQuery.cs">
-      <Link>Query.cs</Link>
+      <Link>MsSqlQuery.cs</Link>
     </Compile>
     <Compile Include="..\compiler\MySqlQuery.cs">
-      <Link>Query.cs</Link>
+      <Link>MySqlQuery.cs</Link>
     </Compile>
     <Compile Include="..\compiler\PgSqlQuery.cs">
-      <Link>Query.cs</Link>
+      <Link>PgSqlQuery.cs</Link>
     </Compile>
   </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Microsoft.SqlServer.Types" Version="10.50.1600.1" />
-    <PackageReference Include="MySql.Data" Version="9.3.0" />
-    <PackageReference Include="Npgsql" Version="8.0.7" />
+    <PackageReference Include="MySql.Data" Version="9.5.0" />
+    <PackageReference Include="Npgsql" Version="10.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 </Project>
