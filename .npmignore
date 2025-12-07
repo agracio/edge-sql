@@ -46,6 +46,7 @@ build.js
 *.sln
 /*.fs
 /*.fsx
+.github/
 
 lib/System.*
 lib/sni.dll
